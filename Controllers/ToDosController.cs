@@ -114,7 +114,6 @@ namespace ToDo.Controllers
             }
             return View(toDos);
         }
-
         // GET: ToDos/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -122,7 +121,6 @@ namespace ToDo.Controllers
             {
                 return NotFound();
             }
-
             var toDos = await _context.ToDos
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (toDos == null)
@@ -132,7 +130,6 @@ namespace ToDo.Controllers
 
             return View(toDos);
         }
-
         // POST: ToDos/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -151,7 +148,6 @@ namespace ToDo.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
         private bool ToDosExists(int id)
         {
           return (_context.ToDos?.Any(e => e.Id == id)).GetValueOrDefault();
