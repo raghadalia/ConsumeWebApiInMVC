@@ -5,7 +5,7 @@ namespace ToDo.Controllers;
 
 public static class ApiController
 {
-    public static void MapToDosEndpoints (this IEndpointRouteBuilder routes)
+    public static void MapToDosEndpoints(this IEndpointRouteBuilder routes)
     {
         routes.MapGet("/api/ToDos", async (ApplicationDbContext db) =>
         {
@@ -54,18 +54,18 @@ public static class ApiController
         .Produces<ToDos>(StatusCodes.Status201Created);
 
         routes.MapDelete("/api/ToDos/{id}", async (int Id, ApplicationDbContext db) =>
-        {
-            if (await db.ToDos.FindAsync(Id) is ToDos toDos)
-            {
-                db.ToDos.Remove(toDos);
-                await db.SaveChangesAsync();
-                return Results.Ok(toDos);
-            }
+                {
+                    if (await db.ToDos.FindAsync(Id) is ToDos toDos)
+                    {
+                        db.ToDos.Remove(toDos);
+                        await db.SaveChangesAsync();
+                        return Results.Ok(toDos);
+                    }
 
-            return Results.NotFound();
-        })
-        .WithName("DeleteToDos")
-        .Produces<ToDos>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound);
+                    return Results.NotFound();
+                })
+                .WithName("DeleteToDos")
+                .Produces<ToDos>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound);
     }
 }
