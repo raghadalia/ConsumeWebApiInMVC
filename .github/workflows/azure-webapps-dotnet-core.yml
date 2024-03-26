@@ -1,34 +1,31 @@
-
-name: Build and deploy ASP.Net Core app to an Azure Web App
+name: .NetCore app to an azure wap
 
 env:
- AZURE_WEBAPP_NAME: github-workflow-demo    # set this to the name of your Azure Web App
- AZURE_WEBAPP_PACKAGE_PATH: '.'             # set this to the path to your web app project, defaults to the repository root
- ROOT_PATH: './actions/aspnet6'     
- DOTNET_VERSION: '6.0.x'   
+  AZURE_WEBAPP_NAME: github-workflow-demo    # set this to the name of your Azure Web App
+  AZURE_WEBAPP_PACKAGE_PATH: '.'             # set this to the path to your web app project, defaults to the repository root
+  ROOT_PATH: './actions/aspnet6'     
+  DOTNET_VERSION: '6.0.x'                    # set this to the .NET Core version to use
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - main
   workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Set up .NET Core
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
+      
       - name: Set up dependency caching for faster builds
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -37,15 +34,18 @@ jobs:
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
+        working-directory: ${{env.ROOT_PATH}}
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        working-directory: ${{env.ROOT_PATH}}
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
+        
 
   deploy_dev:
     name: dev
