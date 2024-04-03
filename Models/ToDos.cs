@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using ToDo.Authentication_Models;
 
 namespace ToDo.Models
 {
@@ -12,8 +13,9 @@ namespace ToDo.Models
         public bool IsCompleted { get; set; }
         public DateTime DueDate { get; set; }
         public string Categories { get; set; }
-
         public string PriorityLevel { get; set; }
-       
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
+
     }
 }

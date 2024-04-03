@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,15 +25,20 @@ namespace ToDo.Controllers
         // GET: ToDos
         public async Task<IActionResult> Index()
         {
-              return _context.ToDos != null ? 
-                          View(await _context.ToDos.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.ToDos'  is null.");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Query the database for tasks associated with the user
+            var tasks = await _context.ToDos
+                .Where(t => t.UserId == userId)
+                .ToListAsync();
+
+            return View(tasks);
         }
 
         // GET: ToDos/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.ToDos == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -54,24 +60,39 @@ namespace ToDo.Controllers
         }
 
         // POST: ToDos/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            toDos.UserId = userId;
+
             if (ModelState.IsValid)
             {
+                
                 _context.Add(toDos);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(toDos);
         }
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        _context.Add(toDos);
+        //        await _context.SaveChangesAsync();
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    return View(toDos);
+        //}
 
         // GET: ToDos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.ToDos == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -116,10 +137,11 @@ namespace ToDo.Controllers
             }
             return View(toDos);
         }
+
         // GET: ToDos/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.ToDos == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -132,27 +154,24 @@ namespace ToDo.Controllers
 
             return View(toDos);
         }
+
         // POST: ToDos/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.ToDos == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.ToDos'  is null.");
-            }
             var toDos = await _context.ToDos.FindAsync(id);
             if (toDos != null)
             {
                 _context.ToDos.Remove(toDos);
+                await _context.SaveChangesAsync();
             }
-            
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
         private bool ToDosExists(int id)
         {
-          return (_context.ToDos?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _context.ToDos.Any(e => e.Id == id);
         }
     }
 }
