@@ -1,12 +1,7 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using ToDo.Authentication_Models;
 using ToDo.Data;
-using ToDo.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,16 +20,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = false;
     options.Password.RequiredUniqueChars = 1;
-    //User Settings
-    //options.User.RequireUniqueEmail = true;
-    //options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    //Sign In settings
-    //options.SignIn.RequireConfirmedAccount = true;
 
-    //Lockout Settings
+    // Lockout Settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(60);
     options.Lockout.MaxFailedAccessAttempts = 5;
 })
+    .AddRoles<IdentityRole>() 
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -61,12 +52,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+});
 
-app.MapControllers();
-app.MapRazorPages();
-
-app.MapToDosEndpoints();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapRazorPages();
+});
 
 app.MapControllerRoute(
     name: "default",

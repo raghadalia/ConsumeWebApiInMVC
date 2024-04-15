@@ -1,10 +1,9 @@
 ﻿@model IEnumerable<ToDo.Models.ToDos>
 
-@if (User.Identity.IsAuthenticated)
-{
-   
+
+   @{
         ViewData["Title"] = "ToDo List";
-    
+}
 
     <head>
         <meta charset="utf-8" />
@@ -84,8 +83,3 @@
             }
         </tbody>
     </table>
-}
-else
-{
-    <p>Please log in to view your tasks.</p>
-}

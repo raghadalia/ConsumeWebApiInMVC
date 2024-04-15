@@ -10,6 +10,7 @@ namespace ToDo.Data
             : base(options)
         {
         }
+
         public DbSet<ToDos> ToDos { get; set; }
     }
 }

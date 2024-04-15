@@ -1,50 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using ToDo.Authentication_Models;
 using ToDo.Data;
 using ToDo.Models;
 
 namespace ToDo.Controllers
 {
-    [Authorize]
+    
     public class ToDosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ToDosController(ApplicationDbContext context)
+        public ToDosController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        // GET: ToDos
-        public async Task<IActionResult> Index()
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+		[Authorize(Roles = "User,Admin")]
+		// GET: ToDos
+		public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            // Query the database for tasks associated with the user
-            var tasks = await _context.ToDos
-                .Where(t => t.UserId == userId)
-                .ToListAsync();
-
-            return View(tasks);
+            var currentUser = await GetCurrentUserAsync();
+            var userTasks = await _context.ToDos.Where(todo => todo.User.Id== currentUser.Id).ToListAsync();
+            return View(userTasks);
         }
-
-        // GET: ToDos/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> All()
+        {
+            var toDos = await _context.ToDos.Include(t => t.User).ToListAsync();
+            return View(toDos);
+        }
+		[Authorize(Roles = "User")]
+		// GET: ToDos/Details/5
+		public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var toDos = await _context.ToDos
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var toDos = await _context.ToDos.FirstOrDefaultAsync(m => m.Id == id);
             if (toDos == null)
             {
                 return NotFound();
@@ -52,45 +54,31 @@ namespace ToDo.Controllers
 
             return View(toDos);
         }
-
-        // GET: ToDos/Create
-        public IActionResult Create()
+		[Authorize(Roles = "User")]
+		// GET: ToDos/Create
+		public IActionResult Create()
         {
             return View();
         }
-
-        // POST: ToDos/Create
-        [HttpPost]
+		[Authorize(Roles = "User")]
+		[HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            toDos.UserId = userId;
-
-            if (ModelState.IsValid)
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser != null)
             {
                 
+                toDos.User= currentUser;
                 _context.Add(toDos);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(toDos);
         }
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(toDos);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(toDos);
-        //}
-
-        // GET: ToDos/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+		[Authorize(Roles = "User")]
+		// GET: ToDos/Edit/5
+		public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
@@ -105,22 +93,26 @@ namespace ToDo.Controllers
             return View(toDos);
         }
 
-        // POST: ToDos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
+		[Authorize(Roles = "User")]
+		public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
         {
             if (id != toDos.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
-                try
+            try
                 {
+                var currentUser = await GetCurrentUserAsync();
+                if (currentUser != null)
+                {
+
+                    toDos.User = currentUser;
                     _context.Update(toDos);
                     await _context.SaveChangesAsync();
+                }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -134,19 +126,19 @@ namespace ToDo.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
+            
             return View(toDos);
         }
-
-        // GET: ToDos/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+		[Authorize(Roles = "User")]
+		// GET: ToDos/Delete/5
+		public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var toDos = await _context.ToDos
-                .FirstOrDefaultAsync(m => m.Id == id);
+
+            var toDos = await _context.ToDos.FirstOrDefaultAsync(m => m.Id == id);
             if (toDos == null)
             {
                 return NotFound();
@@ -155,10 +147,10 @@ namespace ToDo.Controllers
             return View(toDos);
         }
 
-        // POST: ToDos/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+		[Authorize(Roles = "User")]
+		public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var toDos = await _context.ToDos.FindAsync(id);
             if (toDos != null)

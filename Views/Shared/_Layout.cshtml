@@ -31,6 +31,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="ToDos" asp-action="Index">ToDo List</a>
                         </li>
+                        <li>
+                            <a class="nav-link text-dark" href="@Url.Action("All", "ToDos")">ToDo for User In Role Admin</a>
+                        </li>
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
