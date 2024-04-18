@@ -23,7 +23,7 @@
    - Build the solution in Visual Studio to ensure all dependencies are resolved.
    - Set the startup project to the web application project (typically named `ToDo`).
    - Press F5 or click on the Run button in Visual Studio to start the application.
-   - Alternatively, you can run `dotnet run` in the Terminal.
+   - Alternatively, you can run `dotnet watch run` in the Terminal.
    - Now, the application should be running locally on your machine.
 
 ## Project Structure and Code Organization
