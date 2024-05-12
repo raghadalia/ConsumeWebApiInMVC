@@ -44,20 +44,16 @@
                 @Html.DisplayFor(modelItem => item.User.Email)
             </td>
             <td>
-                    @foreach (var role in await UserManager.GetRolesAsync(item.User))
-                    {
-                        @foreach (var userRole in await UserManager.GetRolesAsync(item.User))
-                        {
-                            <div>@userRole</div>
-                        }
-
-
-                    }
-                    <input type="hidden" name="userId" value="@item.User.Id">
-                    
+                @foreach (var role in await UserManager.GetRolesAsync(item.User))
+                {
+                    <div>@role</div>
+                }
+                <input type="hidden" name="userId" value="@item.User.Id">
             </td>
             <td>
             </td>
         </tr>
     }
+
+    
 </table>

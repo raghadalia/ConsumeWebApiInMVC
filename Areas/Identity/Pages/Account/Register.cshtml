@@ -4,34 +4,68 @@
     ViewData["Title"] = "Register";
 }
 
-<h1>@ViewData["Title"]</h1>
+<style>
+    /* Center form horizontally */
+    .col-md-4 {
+        margin: auto;
+    }
 
+    /* Add padding to form section */
+    form {
+        padding: 30px;
+    }
+
+    /* Rounded corners for input fields */
+    .form-control {
+        border-radius: 5px;
+        background-color: #f5f5f5; /* Light gray background */
+    }
+
+    /* Style button */
+    #registerSubmit {
+        background-color: blue; /* Blue button */
+        border-color: #2e6da4;
+        color: white;
+    }
+
+        #registerSubmit:hover {
+            background-color: #28609e; /* Darker blue on hover */
+        }
+</style>
+<br >
+<br >
 <div class="row">
-    <div class="col-md-4">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h2>Create a new account.</h2>
-            <hr />
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-floating">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+    <div class="col-md-4 border border-primary rounded m-20">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="py-5">
+            <div class="d-flex justify-content-center">
+                <i class="icon-map-marker icon-4x text-success"></i>
+            </div>
+            <div class="d-flex justify-content-center">
+                <h2 class="h3 mb-3 font-weight-normal">Create a new account</h2>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </div>
+            <br>
+            <div class="form-group ">
                 <label asp-for="Input.Email"></label>
+                <input asp-for="Input.Email" class="form-control" placeholder="Email address" autocomplete="username" aria-required="true" />
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
-            <div class="form-floating">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
+            <br>
+            <div class="form-group ">
                 <label asp-for="Input.Password"></label>
+                <input asp-for="Input.Password" class="form-control" placeholder="Password" autocomplete="new-password" aria-required="true" />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
-            <div class="form-floating">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
+            <br>
+            <div class="form-group ">
                 <label asp-for="Input.ConfirmPassword"></label>
+                <input asp-for="Input.ConfirmPassword" class="form-control" placeholder="Confirm password" autocomplete="new-password" aria-required="true" />
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
-
+            <br>
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </form>
     </div>
-    
 </div>
 
 @section Scripts {

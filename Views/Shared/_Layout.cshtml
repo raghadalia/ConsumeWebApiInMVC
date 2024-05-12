@@ -11,8 +11,20 @@
 <style>
     .custom-navbar {
         background-color: LightGray; 
-        color: #fff; /* Text color */
+        color: #fff;
     }
+
+    .nav-item .navbar-brand {
+        margin-right: 30px; 
+    }
+
+    .navbar-brand {
+        margin-right: 30px;
+    }
+    .nav-link {
+        font-size: 18px; 
+    }
+
 </style>
 <body>
     <header>
@@ -31,9 +43,19 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="ToDos" asp-action="Index">ToDo List</a>
                         </li>
-                        <li>
-                            <a class="nav-link text-dark" href="@Url.Action("All", "ToDos")">ToDo for User In Role Admin</a>
-                        </li>
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <li>
+                                <a class="nav-link text-dark" href="@Url.Action("All", "ToDos")">ToDo for User In Role Admin</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li>
+                                <a class="nav-link text-dark" href="@Url.Action("AccessDenied", "Home")"></a>
+                            </li>
+                        }
+
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
