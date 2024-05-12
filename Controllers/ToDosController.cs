@@ -1,35 +1,51 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using ToDo.Authentication_Models;
 using ToDo.Data;
 using ToDo.Models;
 
 namespace ToDo.Controllers
 {
-    
+
     public class ToDosController : Controller
     {
+        Uri baseAddress = new Uri("https://localhost:44349/api/");
+        private readonly HttpClient _client;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ToDosController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ToDosController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, HttpClient client)
         {
+            _client = client;
+            _client.BaseAddress = baseAddress;
             _context = context;
             _userManager = userManager;
         }
-
-        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
-		[Authorize(Roles = "User,Admin")]
-		// GET: ToDos
-		public async Task<IActionResult> Index()
+        private async Task<ApplicationUser> GetUserByIdAsync(string userId)
         {
-            var currentUser = await GetCurrentUserAsync();
-            var userTasks = await _context.ToDos.Where(todo => todo.User.Id== currentUser.Id).ToListAsync();
-            return View(userTasks);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        }
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+        [Authorize(Roles = "User,Admin")]
+        // GET: ToDos
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var response = await _client.GetAsync("ToDoApi/Index");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var userTasks = JsonConvert.DeserializeObject<List<ToDos>>(content);
+                return View(userTasks);
+            }
+            else
+            {
+                return View("Error");
+            }
         }
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> All()
@@ -37,66 +53,85 @@ namespace ToDo.Controllers
             var toDos = await _context.ToDos.Include(t => t.User).ToListAsync();
             return View(toDos);
         }
-		[Authorize(Roles = "User")]
-		// GET: ToDos/Details/5
-		public async Task<IActionResult> Details(int? id)
+        [Authorize(Roles = "User")]
+        // GET: ToDos/Details/5
+        [HttpGet("ToDos/Details/{id}")]
+        public async Task<IActionResult> Details(int id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var toDos = await _context.ToDos.FirstOrDefaultAsync(m => m.Id == id);
-            if (toDos == null)
+            var response = await _client.GetAsync($"ToDoApi/Details/{id}");
+            if (!response.IsSuccessStatusCode)
             {
                 return NotFound();
             }
 
+            var content = await response.Content.ReadAsStringAsync();
+            var toDos = JsonConvert.DeserializeObject<ToDos>(content);
+
             return View(toDos);
         }
-		[Authorize(Roles = "User")]
-		// GET: ToDos/Create
-		public IActionResult Create()
+        [Authorize(Roles = "User")]
+        // GET: ToDos/Create
+        public IActionResult Create()
         {
             return View();
         }
-		[Authorize(Roles = "User")]
-		[HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
-        {
-            var currentUser = await GetCurrentUserAsync();
-            if (currentUser != null)
-            {
-                
-                toDos.User= currentUser;
-                _context.Add(toDos);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(toDos);
-        }
-		[Authorize(Roles = "User")]
-		// GET: ToDos/Edit/5
-		public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var toDos = await _context.ToDos.FindAsync(id);
-            if (toDos == null)
-            {
-                return NotFound();
-            }
-            return View(toDos);
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-		[Authorize(Roles = "User")]
-		public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,IsCompleted,DueDate,Categories,PriorityLevel")] ToDos toDos)
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> Create(ToDos toDos)
+        {
+            try
+            {
+                    var data = JsonConvert.SerializeObject(toDos);
+                    var content = new StringContent(data, Encoding.UTF8, "application/json");
+                    var response = await _client.PostAsync("ToDoApi/Create", content);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+                    else
+                    {
+                        return View(toDos);
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+             
+                TempData["errorMessage"] = ex.Message;
+                return View(toDos);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            ToDos toDos = new ToDos();
+            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + "ToDoApi/Details/" + id).Result;
+
+            if (response.IsSuccessStatusCode)
+            {
+                string data = response.Content.ReadAsStringAsync().Result;
+                toDos = JsonConvert.DeserializeObject<ToDos>(data);
+                return View(toDos);
+            }
+            else
+            {
+              
+                return View("Error");
+            }
+        }
+
+        // POST: ToDos/Edit/5
+        [HttpPost("ToDos/Edit/{id}")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> Edit(int id, ToDos toDos)
         {
             if (id != toDos.Id)
             {
@@ -104,61 +139,55 @@ namespace ToDo.Controllers
             }
 
             try
-                {
+            {
                 var currentUser = await GetCurrentUserAsync();
                 if (currentUser != null)
                 {
-
                     toDos.User = currentUser;
-                    _context.Update(toDos);
-                    await _context.SaveChangesAsync();
-                }
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ToDosExists(toDos.Id))
+                    var data = JsonConvert.SerializeObject(toDos);
+                    var content = new StringContent(data, Encoding.UTF8, "application/json");
+                    var response = _client.PutAsync(_client.BaseAddress + $"ToDoApi/Edit/{id}", content).Result;
+                    if (response.IsSuccessStatusCode)
                     {
-                        return NotFound();
+                        return RedirectToAction(nameof(Index));
                     }
                     else
                     {
-                        throw;
+                    
+                        return View(toDos);
                     }
                 }
-                return RedirectToAction(nameof(Index));
-            
-           
-        }
-		[Authorize(Roles = "User")]
-		// GET: ToDos/Delete/5
-		public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                // Handle exception
+                TempData["errorMessage"] = ex.Message;
+                return View(toDos);
             }
 
-            var toDos = await _context.ToDos.FirstOrDefaultAsync(m => m.Id == id);
-            if (toDos == null)
-            {
-                return NotFound();
-            }
-
-            return View(toDos);
-        }
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-		[Authorize(Roles = "User")]
-		public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var toDos = await _context.ToDos.FindAsync(id);
-            if (toDos != null)
-            {
-                _context.ToDos.Remove(toDos);
-                await _context.SaveChangesAsync();
-            }
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost("{id}")]
+        [Authorize(Roles = "User")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            try
+            {
+               HttpResponseMessage response =  _client.DeleteAsync(_client.BaseAddress + $"ToDoApi/Delete/{id}" ).Result;
+                if (response.IsSuccessStatusCode)
+                {       
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    return View("Error"); 
+                }
+            }
+            catch (Exception )
+            { 
+                return View("Error");
+            }
         }
 
         private bool ToDosExists(int id)

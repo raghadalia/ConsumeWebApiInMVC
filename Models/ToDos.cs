@@ -14,7 +14,8 @@ namespace ToDo.Models
         public DateTime DueDate { get; set; }
         public string Categories { get; set; }
         public string PriorityLevel { get; set; }
-        public ApplicationUser User { get; set; }
+        
+        public virtual ApplicationUser? User { get; set; }
 
     }
 }
