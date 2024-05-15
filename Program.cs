@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ToDo.Authentication_Models;
+using ToDo.Controllers;
 using ToDo.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,11 +48,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddRazorPages();
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
 });
-
+builder.Services.AddHttpClient();
 var app = builder.Build();
 
 // Seed roles
@@ -59,8 +61,8 @@ using (var scope = app.Services.CreateScope())
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await ContextSeed.SeedRolesAsync(userManager, roleManager);
-    await ContextSeed.SeedAdminAsync(userManager, roleManager);
+    //await ContextSeed.SeedRolesAsync(userManager, roleManager);
+    //await ContextSeed.SeedAdminAsync(userManager, roleManager);
 }
 
 if (app.Environment.IsDevelopment())
