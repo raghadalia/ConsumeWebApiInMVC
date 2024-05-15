@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using ToDo.Authentication_Models;
+using System.Linq;
 
 namespace ToDo.Data
 {
@@ -17,6 +18,7 @@ namespace ToDo.Data
                 await roleManager.CreateAsync(new IdentityRole(Enums.Roles.User.ToString()));
             }
         }
+
         public static async Task SeedAdminAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             // Seed Default User
@@ -38,7 +40,7 @@ namespace ToDo.Data
                 if (result.Succeeded)
                 {
                     // Check if roles exist before adding
-                    foreach (var roleName in Enums.RoleManager.GetAllRoles())
+                    foreach (var roleName in Enum.GetNames(typeof(Enums.Roles)))
                     {
                         if (!await roleManager.RoleExistsAsync(roleName))
                         {
@@ -55,7 +57,7 @@ namespace ToDo.Data
             {
                 // Check if the user already has the roles assigned
                 var userRoles = await userManager.GetRolesAsync(user);
-                var rolesToAdd = Enums.RoleManager.GetAllRoles().Except(userRoles);
+                var rolesToAdd = Enum.GetNames(typeof(Enums.Roles)).Except(userRoles);
 
                 // Add user to roles if roles are not already assigned
                 foreach (var role in rolesToAdd)
@@ -64,6 +66,5 @@ namespace ToDo.Data
                 }
             }
         }
-
     }
 }

@@ -127,7 +127,7 @@ namespace ToDo.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             
-            return View(toDos);
+        
         }
 		[Authorize(Roles = "User")]
 		// GET: ToDos/Delete/5

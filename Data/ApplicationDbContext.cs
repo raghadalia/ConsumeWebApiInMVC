@@ -11,10 +11,7 @@ namespace ToDo.Data
             : base(options)
         {
         }
-        protected override void OnConfiguring(
-       DbContextOptionsBuilder
-       optionsBuilder
-        )
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
             optionsBuilder.UseSqlServer("Server = (localdb)\\mssqllocaldb; Database = TodoTest; Trusted_Connection = True; MultipleActiveResultSets = true")
