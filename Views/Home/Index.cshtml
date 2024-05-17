@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="~/ToDo.styles.css" asp-append-version="true" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Brush Script;
+        }
+
+        .hero-image {
+            background-image: url('/img/notes2.jpg');
+            background-color: #cccccc;
+            height: 550px;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+        }
+
+        .hero-text {
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+        }
+                /* On mouse-over */
+                .hero-text button:hover {
+                    background-color: #555;
+                    color: white;
+                }
+
+    </style>
+</head>
+<body>
+
+    <div class="hero-image">
+        <div class="hero-text">
+            <h1>Welcome To ToDo Web App</h1>
+            @Html.ActionLink("Start Organizing Your Tasks !", "index", "ToDos", new { area = "" }, new { @class = "btn btn-secondary" })
+        </div>
+    </div>
+
+
+
+</body>
+</html>

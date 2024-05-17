@@ -1,0 +1,59 @@
+﻿@using ToDo.Authentication_Models
+@model IEnumerable<ToDo.Models.ToDos>
+
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>List of ToDoes for all Users</h2>
+<p>
+    Notice that we can see the User info (UserName) and profile info such as Email for the user as well.
+    This was possible because we associated the User object with a ToDo object and hence
+    we can get this rich behavior.
+</p>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Description)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.IsCompleted)
+        </th>
+        <th>@Html.DisplayNameFor(model => model.User.UserName)</th>
+        <th>@Html.DisplayNameFor(model => model.User.Email)</th>
+        <th>Roles</th>
+      
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsCompleted)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.User.UserName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.User.Email)
+            </td>
+            <td>
+                @foreach (var role in await UserManager.GetRolesAsync(item.User))
+                {
+                    <div>@role</div>
+                }
+                <input type="hidden" name="userId" value="@item.User.Id">
+            </td>
+            <td>
+            </td>
+        </tr>
+    }
+
+    
+</table>
